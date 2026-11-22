@@ -1,4 +1,4 @@
-import type { PracticeQuestion } from './question'
+import type { PracticeQuestion } from '../../question/@x/attempt'
 
 export type AttemptSummary = {
   id: string

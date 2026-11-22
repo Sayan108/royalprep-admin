@@ -1,9 +1,11 @@
+import { SnackbarMessage } from '../../shared/ui/snackbar'
+import { LoadingState } from '../../shared/ui/loading-state'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ErrorMessage } from '../components/ErrorMessage'
-import { ScreenLayout } from '../components/ScreenLayout'
-import type { Question, QuestionReport } from '../models/question'
-import { api } from '../services/api'
+import { ErrorMessage } from '../../shared/ui/error-message/index'
+import { ScreenLayout } from '../../widgets/screen-layout/index'
+import type { Question, QuestionReport } from '../../entities/question'
+import { api } from '../../shared/api/index'
 
 const csvHeader = 'chapter,published,stem,option_a,option_b,option_c,option_d,correct,explanation,source'
 const emptyQuestion = (): Question => ({ id: '', version: 0, chapter: '', published: false, stem: '', options: ['', '', '', ''], correct: 0, explanation: '' })
@@ -20,16 +22,21 @@ export function QuestionBank() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [signedIn, setSignedIn] = useState(Boolean(sessionStorage.getItem('rp-admin')))
   const load = useCallback(async () => {
     const [nextQuestions, nextReports] = await Promise.all([api<Question[]>('/admin/questions', {}, true), api<QuestionReport[]>('/admin/question-reports', {}, true)])
     setQuestions(nextQuestions); setReports(nextReports)
   }, [])
+  const reload = useCallback(() => {
+    setLoading(true); setLoadFailed(false); setError('')
+    load().catch(e => { setLoadFailed(true); setError((e as Error).message); setSignedIn(Boolean(sessionStorage.getItem('rp-admin'))) }).finally(() => setLoading(false))
+  }, [load])
   useEffect(() => {
     if (!signedIn) { setLoading(false); return }
-    load().catch(e => { setError((e as Error).message); setSignedIn(Boolean(sessionStorage.getItem('rp-admin'))) }).finally(() => setLoading(false))
-  }, [signedIn, load])
+    reload()
+  }, [signedIn, reload])
   const rows = useMemo(() => questions.map(question => ({
     question, reports: reports.filter(report => report.questionId === question.id),
   })), [questions, reports])
@@ -79,7 +86,7 @@ export function QuestionBank() {
       <div className="bank-heading"><div><p className="screen-kicker">ADMIN</p><h1>Question bank</h1><p>Every MCQ, its status, source and student reports.</p></div><div className="bank-actions"><button className="screen-button" onClick={() => { setSelection(emptyQuestion()); setError(''); setMessage('') }}>Add question</button><a className="outline-button" href={'data:text/csv;charset=utf-8,' + encodeURIComponent(csvHeader + '\n')} download="questions-template.csv">Download CSV template</a><button className="outline-button" disabled={busy} onClick={signOut}>Sign out</button></div></div>
       <form className="import-bar" onSubmit={importCsv}><label>Import questions CSV<input type="file" accept=".csv,text/csv" onChange={e => setFile(e.target.files?.[0])} /></label><button className="screen-button" disabled={!file || busy}>Import MCQ CSV</button></form>
       <p className="import-hint">One question per row. Use true/false for published and A, B, C or D for correct. Source is optional.</p>
-      <ErrorMessage text={error}/>{message && <p role="status" className="screen-message">{message}</p>}
+      <ErrorMessage text={error}/><SnackbarMessage message={message}/>
       <div className="bank-filters">
         <label><span className="sr-only">Search stem, chapter or ID</span><input placeholder="Search stem, chapter or ID" value={query} onChange={e => setQuery(e.target.value)}/></label>
         <label><span className="sr-only">Chapter</span><select value={chapter} onChange={e => setChapter(e.target.value)}><option value="">All chapters</option>{chapters.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
@@ -89,7 +96,7 @@ export function QuestionBank() {
       <div className="bank-grid">
         <div className="bank-list">
           <div className="bank-list-header"><span>ID / SOURCE</span><span>QUESTION</span><span>STATUS</span><span>REPORTS</span></div>
-          {loading ? <p>Loading questions...</p> : filtered.length === 0 ? <p>No questions match these filters.</p> : filtered.map(row => <button type="button" className={'bank-row' + (selection?.id === row.question.id ? ' active' : '')} key={row.question.id} onClick={() => { setSelection(structuredClone(row.question)); setError(''); setMessage('') }}>
+          {loading ? <LoadingState label="Loading questions..."/> : loadFailed ? <button className="outline-button" type="button" onClick={reload}>Retry loading questions</button> : filtered.length === 0 ? <p>No questions match these filters.</p> : filtered.map(row => <button type="button" className={'bank-row' + (selection?.id === row.question.id ? ' active' : '')} key={row.question.id} onClick={() => { setSelection(structuredClone(row.question)); setError(''); setMessage('') }}>
             <span className="bank-id-cell"><strong className="question-id">{row.question.id.slice(0, 8)}{row.question.id.includes('-') ? '-' + (Number(row.question.id.split('-').at(-1)) + 1) : ''}</strong><small>{row.question.source || 'Unspecified'}</small></span><span className="row-stem">{row.question.stem}</span><span className="bank-status-cell"><span className={'status-badge ' + (row.question.published ? 'published' : 'draft')}>{row.question.published ? 'PUBLISHED' : 'DRAFT'}</span></span><span className="bank-report-cell">{row.reports.length || '–'}</span>
           </button>)}
         </div>

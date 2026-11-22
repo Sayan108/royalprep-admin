@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import type { HeroContent } from '../models/hero'
+import type { HeroContent } from '../../entities/hero'
 
 export function HomeHero({ content, children, preview = false }: { content: HeroContent; children?: ReactNode; preview?: boolean }) {
   return <section className="home-hero">

@@ -1,11 +1,11 @@
 import { Route } from 'react-router-dom'
-import { RequireSession } from './components/RequireSession'
-import { AdminLogin } from './pages/AdminLogin'
-import { QuestionBank } from './pages/QuestionBank'
-import { HeroEditor } from './pages/HeroEditor'
-import { AdminDashboard } from './pages/AdminDashboard'
-import { AdminReports } from './pages/AdminReports'
-import { ChapterEditor } from './pages/ChapterEditor'
+import { RequireSession } from './guards/RequireSession'
+import { AdminLogin } from '../pages/admin-login/index'
+import { QuestionBank } from '../pages/question-bank/index'
+import { HeroEditor } from '../pages/hero-editor/index'
+import { AdminDashboard } from '../pages/admin-dashboard/index'
+import { AdminReports } from '../pages/admin-reports/index'
+import { ChapterEditor } from '../pages/chapter-editor/index'
 
 export const adminRoutes = <>
   <Route path="/admin" element={<AdminLogin/>}/>

@@ -1,10 +1,12 @@
+import { SnackbarMessage } from '../../shared/ui/snackbar'
+import { LoadingState } from '../../shared/ui/loading-state'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ErrorMessage } from '../components/ErrorMessage'
-import { ScreenLayout } from '../components/ScreenLayout'
-import type { ChapterContent, ChapterState } from '../models/chapter'
-import { api } from '../services/api'
-import './hero-editor.css'
+import { ErrorMessage } from '../../shared/ui/error-message/index'
+import { ScreenLayout } from '../../widgets/screen-layout/index'
+import type { ChapterContent, ChapterState } from '../../entities/chapter'
+import { api } from '../../shared/api/index'
+import '../../shared/styles/hero-editor.css'
 
 type AdminChapterSummary = { id: string; currentRevision: number; publishedRevision: number | null; title: string }
 const newSection = () => ({ id: crypto.randomUUID(), title: '', body: '' })
@@ -89,8 +91,8 @@ export function ChapterEditor() {
     <div className="hero-editor-heading"><div><p className="screen-kicker">CONTENT MANAGER</p><h1>{id ? 'Edit chapter' : 'Chapter notes'}</h1><p>Write plain-text sections and publish only approved content.</p></div>
       {!id && <Link className="screen-button" to="/admin/content/chapters/new">New chapter</Link>}
     </div>
-    <ErrorMessage text={error}/>{message && <p role="status" className="screen-message">{message}</p>}
-    {loading ? <p role="status">Loading chapters...</p> : !id ? <section className="screen-card">
+    <ErrorMessage text={error}/><SnackbarMessage message={message}/>
+    {loading ? <LoadingState label="Loading chapters..."/> : !id ? <section className="screen-card">
       {chapters?.length ? <ul>{chapters.map(chapter => <li key={chapter.id}><Link to={'/admin/content/chapters/' + chapter.id}>{chapter.title}</Link> · {chapter.publishedRevision === null ? 'Draft only' : `Published revision ${chapter.publishedRevision}`} · Current revision {chapter.currentRevision}</li>)}</ul> : !error && <p>No chapter notes have been created yet.</p>}
     </section> : (id === 'new' || state) && <>
       <p><Link to="/admin/content/chapters" onClick={event => { if (dirty && !window.confirm('Discard unsaved changes?')) event.preventDefault() }}>← All chapter notes</Link></p>

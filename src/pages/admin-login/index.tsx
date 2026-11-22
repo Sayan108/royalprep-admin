@@ -1,8 +1,9 @@
+import { LoadingState } from '../../shared/ui/loading-state'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ScreenLayout } from '../components/ScreenLayout'
-import { ErrorMessage } from '../components/ErrorMessage'
-import { api } from '../services/api'
+import { ScreenLayout } from '../../widgets/screen-layout/index'
+import { ErrorMessage } from '../../shared/ui/error-message/index'
+import { api } from '../../shared/api/index'
 
 export function AdminLogin() {
   const [password, setPassword] = useState('')
@@ -40,5 +41,5 @@ export function AdminLogin() {
     } catch (e) { setError((e as Error).message) }
     finally { setBusy(false) }
   }
-  return <ScreenLayout admin navigation={false}><section className="screen-card narrow"><h1>Admin sign-in</h1><p>Enter your password and verification code to sign in.</p>{checking ? <p role="status">Checking your session...</p> : challenge ? <form onSubmit={login}><p role="status">{codeMessage}</p><label>Verification code<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}/></label><ErrorMessage text={error}/><button className="screen-button" disabled={busy || code.length !== 6}>Sign in</button><button className="outline-button" type="button" disabled={busy} onClick={() => { setChallenge(''); setCode(''); setCodeMessage(''); setError('') }}>Start again</button></form> : <form onSubmit={requestCode}><label>Admin password<input type="password" required value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password"/></label><ErrorMessage text={error}/><button className="screen-button" disabled={busy}>Request code</button></form>}</section></ScreenLayout>
+  return <ScreenLayout admin navigation={false}><section className="screen-card narrow"><h1>Admin sign-in</h1><p>Enter your password and verification code to sign in.</p>{checking ? <LoadingState label="Checking your session..."/> : challenge ? <form onSubmit={login}><p role="status">{codeMessage}</p><label>Verification code<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}/></label><ErrorMessage text={error}/><button className="screen-button" disabled={busy || code.length !== 6}>Sign in</button><button className="outline-button" type="button" disabled={busy} onClick={() => { setChallenge(''); setCode(''); setCodeMessage(''); setError('') }}>Start again</button></form> : <form onSubmit={requestCode}><label>Admin password<input type="password" required value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password"/></label><ErrorMessage text={error}/><button className="screen-button" disabled={busy}>Request code</button></form>}</section></ScreenLayout>
 }

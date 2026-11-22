@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import brandMark from '../assets/royalprep-mark.svg'
-import { chapterNotesEnabled } from '../config'
+import brandMark from '../../shared/assets/royalprep-logo-256.png'
+import { chapterNotesEnabled } from '../../shared/config/index'
 
 export function ScreenLayout({ children, admin = false, navigation = true }: { children: ReactNode; admin?: boolean; navigation?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)

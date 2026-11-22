@@ -1,10 +1,11 @@
+import { LoadingState } from '../../shared/ui/loading-state'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ErrorMessage } from '../components/ErrorMessage'
-import { ScreenLayout } from '../components/ScreenLayout'
-import type { Question, QuestionReport } from '../models/question'
-import { api } from '../services/api'
-import './study-planner.css'
+import { ErrorMessage } from '../../shared/ui/error-message/index'
+import { ScreenLayout } from '../../widgets/screen-layout/index'
+import type { Question, QuestionReport } from '../../entities/question'
+import { api } from '../../shared/api/index'
+import '../../shared/styles/study-planner.css'
 
 export function AdminDashboard() {
   const [stats, setStats] = useState<{ published: number; drafts: number; reports: number }>()
@@ -19,7 +20,7 @@ export function AdminDashboard() {
   useEffect(() => { void load() }, [load])
   return <ScreenLayout admin><p className="screen-kicker">ADMIN OVERVIEW</p><h1>Dashboard</h1><p>Current question-bank and report activity.</p>
     <ErrorMessage text={error}/>{error && <button className="outline-button" type="button" onClick={load}>Try again</button>}
-    {!stats && !error ? <p role="status">Loading dashboard...</p> : stats && <div className="dashboard-grid">
+    {!stats && !error ? <LoadingState label="Loading dashboard..."/> : stats && <div className="dashboard-grid">
       <section className="screen-card"><h2>Published questions</h2><p>{stats.published}</p><Link className="outline-button" to="/admin/questions">Question bank</Link></section>
       <section className="screen-card"><h2>Draft questions</h2><p>{stats.drafts}</p><Link className="outline-button" to="/admin/questions">Manage drafts</Link></section>
       <section className="screen-card"><h2>Question reports</h2><p>{stats.reports}</p><Link className="outline-button" to="/admin/communications">View reports</Link></section>

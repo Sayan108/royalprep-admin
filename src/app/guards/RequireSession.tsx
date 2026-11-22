@@ -1,9 +1,10 @@
+import { LoadingState } from '../../shared/ui/loading-state'
 import { useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { api, ApiError } from '../services/api'
-import { ErrorMessage } from './ErrorMessage'
-import { ScreenLayout } from './ScreenLayout'
+import { api, ApiError } from '../../shared/api/index'
+import { ErrorMessage } from '../../shared/ui/error-message/index'
+import { ScreenLayout } from '../../widgets/screen-layout/index'
 
 export function RequireSession({ admin = false, children }: { admin?: boolean; children: ReactNode }) {
   const [status, setStatus] = useState<'loading' | 'allowed' | 'unauthorized' | 'error'>('loading')
@@ -37,7 +38,7 @@ export function RequireSession({ admin = false, children }: { admin?: boolean; c
   if (status === 'unauthorized') return <Navigate to={admin ? '/admin' : '/sign-in'} state={{ from: location.pathname + location.search }} replace />
   if (status === 'allowed') return children
   return <ScreenLayout admin={admin} navigation={false}><section className="screen-card">
-    {status === 'loading' ? <p role="status">Checking your session...</p> : <>
+    {status === 'loading' ? <LoadingState label="Checking your session..."/> : <>
       <h1>Unable to check your session</h1><ErrorMessage text={error}/>
       <button className="outline-button" type="button" onClick={() => setAttempt(value => value + 1)}>Try again</button>
     </>}

@@ -1,12 +1,14 @@
+import { SnackbarMessage } from '../../shared/ui/snackbar'
+import { LoadingState } from '../../shared/ui/loading-state'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ErrorMessage } from '../components/ErrorMessage'
-import { HomeHero } from '../components/HomeHero'
-import { ScreenLayout } from '../components/ScreenLayout'
-import type { HeroContent, HeroState } from '../models/hero'
-import { api } from '../services/api'
-import './home.css'
-import './hero-editor.css'
+import { ErrorMessage } from '../../shared/ui/error-message/index'
+import { HomeHero } from '../../widgets/home-hero/index'
+import { ScreenLayout } from '../../widgets/screen-layout/index'
+import type { HeroContent, HeroState } from '../../entities/hero'
+import { api } from '../../shared/api/index'
+import '../../shared/styles/home.css'
+import '../../shared/styles/hero-editor.css'
 
 const emptyHero: HeroContent = { eyebrow: '', headline: '', highlight: '', description: '', primaryLabel: '', primaryPath: '', secondaryLabel: '', secondaryPath: '' }
 const fields: { key: keyof HeroContent; label: string; required: boolean; maxLength: number }[] = [
@@ -66,8 +68,8 @@ export function HeroEditor() {
   return <ScreenLayout admin>
     {!signedIn ? <section className="screen-card"><h1>Homepage hero</h1><p>Sign in to manage content.</p><Link className="screen-button" to="/admin">Admin sign-in</Link></section> : <>
       <div className="hero-editor-heading"><div><p className="screen-kicker">CONTENT MANAGER</p><h1>Homepage hero</h1><p>Draft, preview and publish the student homepage hero.</p></div><Link className="outline-button" to="/admin/questions">Question bank</Link></div>
-      <ErrorMessage text={error}/>{message && <p role="status" className="screen-message">{message}</p>}
-      {loading ? <p role="status">Loading hero content...</p> : state ? <>
+      <ErrorMessage text={error}/><SnackbarMessage message={message}/>
+      {loading ? <LoadingState label="Loading hero content..."/> : state ? <>
         <p>Current revision: {state.currentRevision} · Published: {state.publishedRevision ?? 'Not published'}</p>
         <form className="screen-card" onSubmit={save}>
           {fields.map(field => <label key={field.key}>{field.label}
