@@ -6,6 +6,7 @@ import { ErrorMessage } from '../../shared/ui/error-message/index'
 import { ScreenLayout } from '../../widgets/screen-layout/index'
 import type { ChapterContent, ChapterState } from '../../entities/chapter'
 import { api } from '../../shared/api/index'
+import { SandboxedDocument } from '../../shared/ui/sandboxed-document'
 import '../../shared/styles/hero-editor.css'
 
 type AdminChapterSummary = { id: string; currentRevision: number; publishedRevision: number | null; title: string }
@@ -100,15 +101,19 @@ export function ChapterEditor() {
       <form className="screen-card" onSubmit={save}>
         <label>Chapter title<input required maxLength={160} value={content.title} onChange={event => setContent({ ...content, title: event.target.value })}/></label>
         <label>Practice chapter name (optional)<input maxLength={120} value={content.practiceChapter} onChange={event => setContent({ ...content, practiceChapter: event.target.value })}/><small>Use the exact question-bank chapter name to link practice.</small></label>
-        {content.sections.map((section, index) => <fieldset key={section.id}>
+        {content.documentHtml !== undefined ? <>
+          <details><summary>Edit imported HTML</summary><p>Changes are saved as a new draft. Scripts and embedded frames are not allowed.</p><label>Chapter HTML<textarea maxLength={1000000} rows={16} value={content.documentHtml} onChange={event => setContent({ ...content, documentHtml: event.target.value })}/></label></details>
+          <details><summary>Preview chapter</summary><SandboxedDocument title="Chapter preview" documentHtml={content.documentHtml}/></details>
+          {!content.documentHtml.trim() && <p>Chapter HTML cannot be empty.</p>}
+        </> : content.sections.map((section, index) => <fieldset key={section.id}>
           <legend>Section {index + 1}</legend>
           <label>Section title<input required maxLength={160} value={section.title} onChange={event => setContent({ ...content, sections: content.sections.map(item => item.id === section.id ? { ...item, title: event.target.value } : item) })}/></label>
           <label>Section text<textarea required maxLength={4000} value={section.body} onChange={event => setContent({ ...content, sections: content.sections.map(item => item.id === section.id ? { ...item, body: event.target.value } : item) })}/></label>
           <button className="outline-button" type="button" disabled={content.sections.length === 1 || busy} onClick={() => setContent({ ...content, sections: content.sections.filter(item => item.id !== section.id) })}>Remove section</button>
         </fieldset>)}
         <div className="hero-editor-actions">
-          <button className="outline-button" type="button" disabled={busy || content.sections.length >= 25} onClick={() => setContent({ ...content, sections: [...content.sections, newSection()] })}>Add section</button>
-          <button className="screen-button" disabled={busy}>Save draft</button>
+          {content.documentHtml === undefined && <button className="outline-button" type="button" disabled={busy || content.sections.length >= 25} onClick={() => setContent({ ...content, sections: [...content.sections, newSection()] })}>Add section</button>}
+          <button className="screen-button" disabled={busy || (content.documentHtml !== undefined && !content.documentHtml.trim())}>Save draft</button>
           {state && <button className="outline-button" type="button" disabled={busy || dirty || state.draftRevision === null} onClick={publish}>Publish saved draft</button>}
           {state && <button className="outline-button" type="button" disabled={busy} onClick={() => { if (!dirty || window.confirm('Discard unsaved changes and reload?')) void load() }}>Reload</button>}
         </div>
@@ -119,7 +124,7 @@ export function ChapterEditor() {
           <div><strong>Revision {item.revision}: {item.content.title}</strong>
             <p>{item.publishedAt ? `Published ${new Date(item.publishedAt).toLocaleString()}` : 'Publication time unavailable'}{item.sourceRevision !== null ? ` · Restored from revision ${item.sourceRevision}` : ''}</p>
             <details><summary>Preview content</summary>
-              {item.content.sections.map(section => <div key={section.id}><h3>{section.title}</h3><p style={{ whiteSpace: 'pre-wrap' }}>{section.body}</p></div>)}
+              {item.content.documentHtml ? <SandboxedDocument title={`Chapter revision ${item.revision}`} documentHtml={item.content.documentHtml}/> : item.content.sections.map(section => <div key={section.id}><h3>{section.title}</h3><p style={{ whiteSpace: 'pre-wrap' }}>{section.body}</p></div>)}
             </details>
           </div>
           <button className="outline-button" type="button" disabled={busy} onClick={() => restore(item.revision)}>Restore</button>

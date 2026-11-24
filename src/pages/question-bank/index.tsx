@@ -7,7 +7,7 @@ import { ScreenLayout } from '../../widgets/screen-layout/index'
 import type { Question, QuestionReport } from '../../entities/question'
 import { api } from '../../shared/api/index'
 
-const csvHeader = 'chapter,published,stem,option_a,option_b,option_c,option_d,correct,explanation,source'
+const csvHeader = 'chapter,published,stem,option_a,option_b,option_c,option_d,option_e,correct,explanation,source'
 const emptyQuestion = (): Question => ({ id: '', version: 0, chapter: '', published: false, stem: '', options: ['', '', '', ''], correct: 0, explanation: '' })
 
 export function QuestionBank() {
@@ -85,7 +85,7 @@ export function QuestionBank() {
     {!signedIn ? <section className="screen-card"><h1>Question bank</h1><p>Sign in to manage questions.</p><Link className="screen-button" to="/admin">Admin sign-in</Link></section> : <>
       <div className="bank-heading"><div><p className="screen-kicker">ADMIN</p><h1>Question bank</h1><p>Every MCQ, its status, source and student reports.</p></div><div className="bank-actions"><button className="screen-button" onClick={() => { setSelection(emptyQuestion()); setError(''); setMessage('') }}>Add question</button><a className="outline-button" href={'data:text/csv;charset=utf-8,' + encodeURIComponent(csvHeader + '\n')} download="questions-template.csv">Download CSV template</a><button className="outline-button" disabled={busy} onClick={signOut}>Sign out</button></div></div>
       <form className="import-bar" onSubmit={importCsv}><label>Import questions CSV<input type="file" accept=".csv,text/csv" onChange={e => setFile(e.target.files?.[0])} /></label><button className="screen-button" disabled={!file || busy}>Import MCQ CSV</button></form>
-      <p className="import-hint">One question per row. Use true/false for published and A, B, C or D for correct. Source is optional.</p>
+      <p className="import-hint">One question per row. Use true/false for published and A–E for correct. Option E and source are optional.</p>
       <ErrorMessage text={error}/><SnackbarMessage message={message}/>
       <div className="bank-filters">
         <label><span className="sr-only">Search stem, chapter or ID</span><input placeholder="Search stem, chapter or ID" value={query} onChange={e => setQuery(e.target.value)}/></label>
@@ -107,6 +107,7 @@ export function QuestionBank() {
             <label className="check"><input type="checkbox" checked={selection.published} onChange={e => setSelection({ ...selection, published: e.target.checked })}/> Published and available to students</label>
             <label>Question text<textarea required minLength={5} maxLength={3000} value={selection.stem} onChange={e => setSelection({ ...selection, stem: e.target.value })}/></label>
             {selection.options.map((option, i) => <label key={i}>Option {String.fromCharCode(65 + i)}<input required maxLength={1000} value={option} onChange={e => setSelection({ ...selection, options: selection.options.map((text, j) => j === i ? e.target.value : text) })}/></label>)}
+            {selection.options.length === 4 ? <button className="outline-button" type="button" onClick={() => setSelection({ ...selection, options: [...selection.options, ''] })}>Add option E</button> : <button className="outline-button" type="button" onClick={() => setSelection({ ...selection, options: selection.options.slice(0, 4), correct: selection.correct === 4 ? 0 : selection.correct })}>Remove option E</button>}
             <label>Correct answer<select value={selection.correct} onChange={e => setSelection({ ...selection, correct: Number(e.target.value) })}>{selection.options.map((_, i) => <option value={i} key={i}>Option {String.fromCharCode(65 + i)}</option>)}</select></label>
             <label>Explanation<textarea required maxLength={5000} value={selection.explanation} onChange={e => setSelection({ ...selection, explanation: e.target.value })}/></label>
             <label>Source (optional)<input maxLength={100} value={selection.source || ''} onChange={e => setSelection({ ...selection, source: e.target.value })}/></label>
